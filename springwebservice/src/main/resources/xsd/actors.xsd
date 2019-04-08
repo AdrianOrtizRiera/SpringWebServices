@@ -1,0 +1,90 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+xmlns:tns="http://www.adrian.ortiz.com/actors-ws"
+targetNamespace="http://www.adrian.ortiz.com/actors-ws"
+elementFormDefault="qualified">
+    <xs:element name="getActorByIdRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="actor_id" type="xs:int"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="getActorByIdResponse">
+	    <xs:complexType>
+	        <xs:sequence>
+	            <xs:element name="actorType" type="tns:actorType"/>
+	        </xs:sequence>
+	    </xs:complexType>
+    </xs:element>
+    <xs:complexType name="actorType">
+        <xs:sequence>
+            <xs:element name="actor_id" type="xs:int" />
+            <xs:element name="first_name" type="xs:string" />
+            <xs:element name="last_name" type="xs:string" />
+            <xs:element name="last_update" type="xs:date"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="getAllActorsRequest">
+    	<xs:complexType />
+    </xs:element>  
+    <xs:element name="getAllActorsResponse">
+    	<xs:complexType>
+    		<xs:sequence>
+    			<xs:element name="actorType" type="tns:actorType" maxOccurs="unbounded"/>
+    		</xs:sequence>
+    	</xs:complexType>
+    </xs:element>
+    <xs:complexType name="serviceStatus">
+    	<xs:sequence>
+    		<xs:element name="statusCode" type="xs:string"/>
+    		<xs:element name="message" type="xs:string"/>
+    	</xs:sequence>
+    </xs:complexType>
+    <xs:element name="addActorRequest">
+    	<xs:complexType>
+	    	<xs:sequence>
+	    		<xs:element name="first_name" type="xs:string"/>
+	    		<xs:element name="last_name" type="xs:string"/>
+	    	</xs:sequence>
+    	</xs:complexType>
+    </xs:element>
+    <xs:element name="addActorResponse">
+    	<xs:complexType>
+    		<xs:sequence>
+    			<xs:element name="serviceStatus" type="tns:serviceStatus"/>
+    			<xs:element name="actorType" type="tns:actorType"/>
+    		</xs:sequence>
+    	</xs:complexType>
+    </xs:element>
+    <xs:element name="updateActorRequest">
+    	<xs:complexType>
+	    	<xs:sequence>
+	    		<xs:element name="actor_id" type="xs:int"/>
+	    		<xs:element name="first_name" type="xs:string"/>
+	    		<xs:element name="last_name" type="xs:string"/>
+	    	</xs:sequence>
+    	</xs:complexType>
+    </xs:element>
+    <xs:element name="updateActorResponse">
+    	<xs:complexType>
+	    	<xs:sequence>
+	    		<xs:element name="serviceStatus" type="tns:serviceStatus"/>
+	    		<xs:element name="actorType" type="tns:actorType"/>
+	    	</xs:sequence>
+    	</xs:complexType>
+    </xs:element>
+    <xs:element name="deleteActorRequest">
+    	<xs:complexType>
+	    	<xs:sequence>
+	    		<xs:element name="actor_id" type="xs:int"/>
+	    	</xs:sequence>
+    	</xs:complexType>
+    </xs:element>
+    <xs:element name="deleteActorResponse">
+	    <xs:complexType>
+	    	<xs:sequence>
+	    		<xs:element name="serviceStatus" type="tns:serviceStatus"/>
+	    	</xs:sequence>
+	    </xs:complexType>
+    </xs:element>
+</xs:schema>
