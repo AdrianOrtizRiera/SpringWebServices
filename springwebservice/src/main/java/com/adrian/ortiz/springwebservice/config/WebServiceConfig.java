@@ -18,7 +18,7 @@ import com.adrian.ortiz.springwebservice.endpoint.ActorsEndPoint;
 @Configuration
 public class WebServiceConfig extends WsConfigurerAdapter {
 	
-	@SuppressWarnings({"rawtypes", "uncheked"})
+	@SuppressWarnings({"rawtypes", "unchecked"})
 	@Bean
 	public ServletRegistrationBean messageDispatcherServlet(ApplicationContext context) {
 		MessageDispatcherServlet servlet = new MessageDispatcherServlet();

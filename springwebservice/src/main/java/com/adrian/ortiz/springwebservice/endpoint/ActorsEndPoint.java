@@ -1,10 +1,5 @@
 package com.adrian.ortiz.springwebservice.endpoint;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ws.server.endpoint.annotation.Endpoint;
 import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
@@ -24,37 +19,34 @@ import com.adrian.ortiz.gs_ws.GetAllActorsResponse;
 import com.adrian.ortiz.gs_ws.ServiceStatus;
 import com.adrian.ortiz.gs_ws.UpdateActorRequest;
 import com.adrian.ortiz.gs_ws.UpdateActorResponse;
-import com.adrian.ortiz.springwebservice.dao.entity.ActorEntity;
+import com.adrian.ortiz.springwebservice.controllers.ActorController;
 import com.adrian.ortiz.springwebservice.dao.interfaces.ActorEntityService;
 
 
 @Endpoint
 public class ActorsEndPoint {
 	
-	public static final String NAMESPACE_URI = "http://adrian.ortiz.com/actors-ws";
+	public static final String NAMESPACE_URI = "http://www.adrian.ortiz.com/actors-ws";
 	
-	private ActorEntityService service;
+//	private ActorEntityService service;
+	
+	private ActorController actorController;
 	
 	public ActorsEndPoint() {
 		
 	}
 	
 	@Autowired
-	public ActorsEndPoint(ActorEntityService service) {
-		this.service = service;
+	public ActorsEndPoint(ActorEntityService service, ActorController actorController) {
+	//	this.service = service;
+		this.actorController = actorController;
 	}
 	
 	@PayloadRoot(namespace=NAMESPACE_URI, localPart="getActorByIdRequest")
 	@ResponsePayload
 	public GetActorByIdResponse getActorById(@RequestPayload GetActorByIdRequest request) {
 		GetActorByIdResponse response = new GetActorByIdResponse();
-		ActorEntity actorEntity = service.getEntityById(request.getActorId());
-		ActorType actorType = new ActorType();
-		actorType.setActorId(actorEntity.getActor_id());
-		actorType.setFirstName(actorEntity.getFirst_name());
-		actorType.setLastName(actorEntity.getLast_name());
-		actorType.setLastUpdate(actorType.getLastUpdate());
-		response.setActorType(actorType);
+		response.setActorType(this.actorController.getActorById(request.getActorId()));
 		return response;
 	}
 	
@@ -64,18 +56,7 @@ public class ActorsEndPoint {
 	@ResponsePayload
 	public GetAllActorsResponse getAllActors(@RequestPayload GetAllActorsRequest request) {
 		GetAllActorsResponse response = new GetAllActorsResponse();
-		List<ActorType> actorTypeList = new ArrayList<ActorType>();
-		List<ActorEntity> actorEntityList = service.getAllEntities();
-		for (ActorEntity entity : actorEntityList) {
-			ActorType actorType = new ActorType();
-			actorType.setActorId(entity.getActor_id());
-			actorType.setFirstName(entity.getFirst_name());
-			actorType.setLastName(entity.getLast_name());
-			actorType.setLastUpdate((Date)entity.getLast_update());
-			actorTypeList.add(actorType);
-		}
-		
-		response.getActorType().addAll(actorTypeList);
+		response.getActorType().addAll(this.actorController.getAllActors());
 		return response;
 	}
 	
@@ -83,25 +64,18 @@ public class ActorsEndPoint {
 	@ResponsePayload
 	public AddActorResponse addActor(@RequestPayload AddActorRequest request) {
 		AddActorResponse response = new AddActorResponse();
-		ActorType actorType = new ActorType();
 		ServiceStatus serviceStatus = new ServiceStatus();
+		ActorType actorResult = new ActorType();
+		actorResult = this.actorController.addActor(request);
 		
-		ActorEntity actorEntity = new ActorEntity(request.getFirstName(), request.getLastName());
-		ActorEntity saveActorEntity = this.service.addEntity(actorEntity); 
-		
-		if (saveActorEntity == null) {
+		if(actorResult == null) {
 			serviceStatus.setStatusCode("CONFLICT");
 			serviceStatus.setMessage("Error quan s'ha intentat afegir l'entitat.");
 		} else {
-			actorType.setActorId(saveActorEntity.getActor_id());
-			actorType.setFirstName(saveActorEntity.getFirst_name());
-			actorType.setLastName(saveActorEntity.getLast_name());
-			actorType.setLastUpdate(saveActorEntity.getLast_update());
 			serviceStatus.setStatusCode("SUCCESS");
 			serviceStatus.setMessage("S'ha afegit l'entitat correctament.");
 		}
-		
-		response.setActorType(actorType);
+		response.setActorType(actorResult);
 		response.setServiceStatus(serviceStatus);
 		
 		return response;
@@ -114,47 +88,39 @@ public class ActorsEndPoint {
 		UpdateActorResponse response = new UpdateActorResponse();
 		ServiceStatus serviceStatus = new ServiceStatus();
 		
-		ActorEntity actorResult = this.service.getEntityById(request.getActorId());
-		if (actorResult == null) {
+		Boolean result = this.actorController.updateActor(request);
+		if(result == null) {
 			serviceStatus.setStatusCode("NOT FOUND");
 			serviceStatus.setMessage("L'actor " + request.getFirstName() + " no existeix.");
-			response.setServiceStatus(serviceStatus);
-			return response;
-		} 
+		}
 		
-		actorResult.setFirst_name(request.getFirstName());
-		actorResult.setLast_name(request.getLastName());
-		
-		boolean flag = this.service.updateEntity(actorResult);
-		if(flag == false) {
+		if(result == false) {
 			serviceStatus.setStatusCode("CONFLICT");
 			serviceStatus.setMessage("Error quan s'ha intentat guardarl'entitat.");
-			response.setServiceStatus(serviceStatus);
-			return response;
+		} else {
+			serviceStatus.setStatusCode("SUCCESS");
+			serviceStatus.setMessage("S'ha actualitzat l'entitat");
 		}
-
-		serviceStatus.setStatusCode("SUCCESS");
-		serviceStatus.setMessage("S'ha actualitzat l'entitat");
+		
 		response.setServiceStatus(serviceStatus);
 		return response;
 	}
 	
 	@PayloadRoot(namespace=NAMESPACE_URI, localPart = "deleteActorRequest")
+	@ResponsePayload
 	public DeleteActorResponse deleteActor(@RequestPayload DeleteActorRequest request) {
 		DeleteActorResponse response = new DeleteActorResponse();
 		ServiceStatus serviceStatus = new ServiceStatus();
-		
-		boolean flag = this.service.deleteEntity(request.getActorId());
-		if (!flag ) {
-			serviceStatus.setStatusCode("FAIL");
-			serviceStatus.setMessage("Error quan s'ha intentat esborrar.");
-		} else {
+		Boolean result = this.actorController.deleteActor(request.getActorId());
+		if(result) {
 			serviceStatus.setStatusCode("SUCCESS");
 			serviceStatus.setMessage("Esborrat correctament.");
+		} else {
+			serviceStatus.setStatusCode("FAIL");
+			serviceStatus.setMessage("Error quan s'ha intentat esborrar.");
 		}
 		
 		response.setServiceStatus(serviceStatus);
 		return response; 
-		
 	}
 }
